@@ -1,9 +1,16 @@
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
-configDescList=org.eclipse.launchbar.core.descriptorType.default\:Lab3_LCD,org.eclipse.launchbar.core.descriptorType.default\:Interrupts_Keypad
+activeLaunchTarget=null\:---
+configDescList=
 eclipse.preferences.version=1
 org.eclipse.launchbar.core.descriptorType.default\:Interrupts_Keypad/activeLaunchMode=debug
 org.eclipse.launchbar.core.descriptorType.default\:Interrupts_Keypad/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:LCDLPM/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:LCDLPM/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
 org.eclipse.launchbar.core.descriptorType.default\:Lab3_LCD/activeLaunchMode=debug
 org.eclipse.launchbar.core.descriptorType.default\:Lab3_LCD/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:Timers-7segment/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:Timers-7segment/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:UART/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:UART/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

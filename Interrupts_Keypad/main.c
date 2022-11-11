@@ -133,20 +133,21 @@ void initLCD() {
  */
 
 void setInterrupt() {
-    // Interrupt port
-    _SET_INPUT(2, 6);                   // Switch interrupt input port
-    P2REN |= BIT6;                      // Enable resistor
-    P2IES |= BIT6;                      // Set interrupt edge
-    P2IE |= BIT6;                       // Enable pin interrupt
-    P2IFG &= ~BIT6;                     // Clear interrupt flag
-    _BIS_SR(GIE);                       // Enable global interrupts
+    _SET_INPUT(2, 6);    // Switch interrupt input port
+    P2REN |= BIT6;       // Enable pulldown or pullup
+    P2OUT |= BIT6;
+    P2IES |= BIT6;       // Set interrupt edge
+    P2IE |= BIT6;        // Enable pin interrupt
+    P2IFG &= ~BIT6;      // Clear interrupt flag
+    _BIS_SR(GIE);        // Enable global interrupts
 }
 
 // ISR, called automatically on button press
-__attribute__( (interrupt (PORT2_VECTOR)) )
-void PORT2_ISR() {
+#pragma vector=PORT2_VECTOR
+__interrupt void Port_2(void) {
     PUSH_FLAG = 1;
-    P2IFG &= ~BIT6;                     // Clear interrupt flag, PUT BREAKPOINT HERE TO SEE COUNTER VALUE IN DEBUGGER
+    counter++;
+    P2IFG &= ~BIT6;      // Clear interrupt flag for reuse
 }
 
 void main(void)
@@ -158,10 +159,10 @@ void main(void)
 
     while(1) {
         if(PUSH_FLAG == 1) {
-            Wait(200);                  // Needed for software debouncing
+            Wait(200);             // Needed for software debouncing
             counter++;
-            // Write counter to LCD here
-            //
+            setcmd(_CLEAR_DISPLAY);
+            writeMessage(counter);
             PUSH_FLAG = 0;
         }
     }

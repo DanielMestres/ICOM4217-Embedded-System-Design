@@ -9,21 +9,21 @@ CMD_SRCS += \
 ../lnk_msp430f5438.cmd 
 
 C_SRCS += \
-../main.c 
+../keypad.c 
 
 C_DEPS += \
-./main.d 
+./keypad.d 
 
 OBJS += \
-./main.obj 
+./keypad.obj 
 
 OBJS__QUOTED += \
-"main.obj" 
+"keypad.obj" 
 
 C_DEPS__QUOTED += \
-"main.d" 
+"keypad.d" 
 
 C_SRCS__QUOTED += \
-"../main.c" 
+"../keypad.c" 
 
 
