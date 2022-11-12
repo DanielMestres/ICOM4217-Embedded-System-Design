@@ -13,27 +13,37 @@
 
 // Global counter
 volatile int counter = 0;
+
+// Global flag
+volatile int PUSH_FLAG = 0;
+
 char countStr[] = "000";
 
-// Actualiza el countStr, FIX ????
+// Actualiza el countStr
 void updateCountStr() {
     if(counter==0) return;
 
     int temp = counter;       // <- como counter es global, pues pa no cambiarlo
     int i = 0;                  // ???
-    for(temp > 0; temp /= 10; i++){
+    for(; temp > 0; temp /= 10, i++){
 
         //si no hacemos esto, el string se guarda al reves. es decir
         //si count es 123, el countStr[] lo guardaria como 321
         countStr[strlen(countStr)-1-i]= temp%10 + '0';
     }
 
+    while(i < 3) {
+        countStr[strlen(countStr)-1-i]=0+'0';
+        i++;
+    }
+
+    setcmd(_DISPLAY_CLEAR);
+    writeMessage(countStr);
+
 }
 
-// Global flag
-volatile int PUSH_FLAG = 0;
-
-static void Wait(volatile int time_1) {
+static void Wait(volatile int time_1)
+{
     volatile int time_2;
     for (time_1; time_1>1; time_1--)
     {
@@ -54,6 +64,8 @@ void setLCDPorts() {
     _SET_OUTPUT(4, 1);          // D5 output
     _SET_OUTPUT(4, 2);          // D6 output
     _SET_OUTPUT(4, 3);          // D7 output
+
+    _SET_INPUT(1, 4);           // Switch interrupt input port
 }
 
 void setKeypadPorts() {
@@ -120,11 +132,16 @@ void setcmd(volatile int cmd) {
     enable();
 
     clearpins();
-    Wait(100);
+    Wait(70);
 }
 
 void setdata(volatile int data) {
     setWriteData();
+//    if(data == '4') {
+//        data = '6';
+//    } else if(data == '6') {
+//        data = '4';
+//    }
     P3OUT |= ((data >> 0) & 1) << 4;
     P3OUT |= ((data >> 1) & 1) << 5;
     P3OUT |= ((data >> 2) & 1) << 6;
@@ -136,14 +153,31 @@ void setdata(volatile int data) {
     enable();
 
     clearpins();
-    Wait(100);
+    Wait(70);
 }
 
-// Only pass strings or char *
 void writeMessage(char* message) {
     unsigned int i;
     for(i = 0; i < strlen(message); i++)
         setdata(message[i]);
+}
+
+void setCursorPOS(char direction, int amount) {
+    setWriteInstruction();
+    int i;
+    // command = 0x10
+    if(direction == 'l') {
+        for(i = 0; i < amount; i++) {
+            setcmd(0x10);
+        }
+    }
+
+    // command = 0x14
+    if(direction == 'r') {
+        for(i = 0; i < amount; i++) {
+            setcmd(0x14);
+        }
+    }
 }
 
 void initLCD() {
@@ -156,82 +190,87 @@ void initLCD() {
 
 void setInterrupt() {
     // Interrupt ports
-    P1REN |= (BIT2 | BIT5 | BIT6);      // Enable resistor
-    P1OUT |= (BIT2 | BIT5 | BIT6);
-    P1IES |= (BIT2 | BIT5 | BIT6);      // Set interrupt edge
-    P1IE |= (BIT2 | BIT5 | BIT6);       // Enable pin interrupt
-    P1IFG &= ~(BIT2 | BIT5 | BIT6);     // Clear interrupt flag
-
-    _BIS_SR(GIE);                       // Enable global interrupts
+    P1REN |= (BIT2 | BIT4 | BIT5 | BIT6);      // Enable resistor
+    P1OUT &= ~(BIT2 | BIT4 | BIT5 | BIT6);
+    P1IES &= ~(BIT2 | BIT4 | BIT5 | BIT6);      // Set interrupt edge, CAUSE OF DELAY !!!!
+    P1IE |= (BIT2 | BIT4 | BIT5 | BIT6);       // Enable pin interrupt
+    P1IFG &= ~(BIT2 | BIT4 | BIT5 | BIT6);     // Clear interrupt flag
+    _BIS_SR(GIE);                              // Enable global interrupts
 }
 
-// ISR KEYPAD FINISH IMPLEMENTATION, MOVE FUNCTION CALLS ?????
+// ISR KEYPAD LOOPING HERE
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void) {
     PUSH_FLAG = 1;
-    counter++;
-
-    // First Column
-    if(P1IFG & BIT2) {
-        // 1 - 4 Rows
-        if(P10OUT & BIT3) {
+        if(P1IFG & BIT4) {
+            counter++;
+            updateCountStr();
+//            setcmd(_DISPLAY_CLEAR);
+//            writeMessage(countStr);
+            P1IFG &= ~BIT4;
+        } else
+        if(P1IFG & BIT2 && P10OUT & BIT3) {
+            Wait(10);
             setdata('1');
-        }
-
-        if(P10OUT & BIT4) {
+            P1IFG &= ~BIT2;
+        } else
+        if(P1IFG & BIT2 && P10OUT & BIT4) {
+            Wait(10);
             setdata('4');
-        }
-
-        if(P10OUT & BIT5) {
+            P1IFG &= ~BIT2;
+        } else
+        if(P1IFG & BIT2 && P10OUT & BIT5) {
+            Wait(10);
             setdata('7');
-        }
-
-        if(P10OUT & BIT6) {
+            P1IFG &= ~BIT2;
+        } else
+        if(P1IFG & BIT2 && P10OUT & BIT6) {
+            Wait(10);
             setcmd(_DISPLAY_CLEAR);
-        }
-    }
-
-    // Second Column
-    if(P1IFG & BIT5) {
-        // 1 - 4 Rows
-        if(P10OUT & BIT3) {
+            P1IFG &= ~BIT2;
+        } else
+        if(P1IFG & BIT5 && P10OUT & BIT3) {
+            Wait(10);
             setdata('2');
-        }
-
-        if(P10OUT & BIT4) {
+            P1IFG &= ~BIT5;
+        } else
+        if(P1IFG & BIT5 && P10OUT & BIT4) {
+            Wait(10);
             setdata('5');
-        }
-
-        if(P10OUT & BIT5) {
+            P1IFG &= ~BIT5;
+        } else
+        if(P1IFG & BIT5 && P10OUT & BIT5) {
+            Wait(10);
             setdata('8');
-        }
-
-        if(P10OUT & BIT6) {
+            P1IFG &= ~BIT5;
+        } else
+        if(P1IFG & BIT5 && P10OUT & BIT6) {
+            Wait(10);
             setdata('0');
-        }
-    }
-
-    // Third Column
-    if(P1IFG & BIT6) {
-        // 1 - 4 Rows
-        if(P10OUT & BIT3) {
+            P1IFG &= ~BIT5;
+        } else
+        if(P1IFG & BIT6 && P10OUT & BIT3) {
+            Wait(10);
             setdata('3');
-        }
-
-        if(P10OUT & BIT4) {
+            P1IFG &= ~BIT6;
+        } else
+        if(P1IFG & BIT6 && P10OUT & BIT4) {
+            Wait(10);
             setdata('6');
-        }
-
-        if(P10OUT & BIT5) {
+            P1IFG &= ~BIT6;
+        } else
+        if(P1IFG & BIT6 && P10OUT & BIT5) {
+            Wait(10);
             setdata('9');
+            P1IFG &= ~BIT6;
+        } else
+        if(P1IFG & BIT6 && P10OUT & BIT6) {
+            Wait(10);
+            setCursorPOS('r', 40);
+            P1IFG &= ~BIT6;
         }
 
-        if(P10OUT & BIT6) {
-            // Change line to write
-        }
-    }
-
-    P1IFG &= ~(BIT2 | BIT5 | BIT6);
+    P1IFG &= ~(BIT2 | BIT4 | BIT5 | BIT6);
 }
 
 void main(void) {
@@ -241,30 +280,28 @@ void main(void) {
     setInterrupt();
     initLCD();
 
-    // Loop rows and display counter
     while(1) {
-        if(PUSH_FLAG == 1) {
-            updateCountStr();
-            // writeMessage(countStr);      // Uncomment to display counter in LCD ******
-            PUSH_FLAG == 0;
-        }
+       if(PUSH_FLAG == 1) {
+           Wait(100);                   // Software Debounce
+           counter++;
+           updateCountStr();
+           setcmd(_CLEAR_DISPLAY);
+           writeMessage(countStr);
+           PUSH_FLAG = 0;
+       }
 
-
-        P10OUT ^= BIT3;
-        Wait(10);
-
-        P10OUT ^= BIT3;
-        P10OUT ^= BIT4;
-        Wait(10);
-
-        P10OUT ^= BIT4;
-        P10OUT ^= BIT5;
-        Wait(10);
-
-        P10OUT ^= BIT5;
-        P10OUT ^= BIT6;
-        Wait(10);
-
-        P10OUT ^= BIT6;
+        // Loop rows
+        P10OUT |= BIT3;
+        Wait(45);
+        P10OUT &= ~BIT3;
+        P10OUT |= BIT4;
+        Wait(45);
+        P10OUT &= ~BIT4;
+        P10OUT |= BIT5;
+        Wait(45);
+        P10OUT &= ~BIT5;
+        P10OUT |= BIT6;
+        Wait(45);
+        P10OUT &= ~BIT6;
     }
 }

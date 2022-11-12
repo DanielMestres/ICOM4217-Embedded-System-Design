@@ -38,7 +38,7 @@ void main(void)
 	setPWM();
 
 	while(1) {
-
+        // FULLY INTERRUPT BASED
 	}
 }
 
@@ -74,22 +74,19 @@ void setPWM() {
     TA0CCR3 = 0;
     TA0CTL |= (TASSEL_2 | ID_1 | MC_1);  // SMCLK 1 MHz, Up Mode, /2 prescaler
 
-    TA0CCTL0 |= CCIE;                   // Enable interrupt for CCR0.
-    TA0CTL &= ~TAIFG;
-
     // Timer0_B0 Configuration (TB0)
     P4SEL |= BIT2;
     TB0CCR0 = 500;                     // Compare Register
     TB0CCTL2 = OUTMOD_7;                // Reset output mode
     TB0CCR2 = 0;
-    TB0CTL |= (TASSEL_2 | ID_1 | MC_1);           // ACLK, Up Mode /2 prescaler
+    TB0CTL |= (TASSEL_2 | ID_1 | MC_1); // SMCLK 1 MHz, Up Mode, /2 prescaler
 
     // Timer0_A1 Configuration (TA1)
     P7SEL |= BIT3;
     TA1CCR0 = 500;                     // Compare Register
     TA1CCTL2 = OUTMOD_7;                // Reset output mode
     TA1CCR2 = 500;
-    TA1CTL |= (TASSEL_2 | ID_1 | MC_1);           // ACLK, Up Mode /2 prescaler
+    TA1CTL |= (TASSEL_2 | ID_1 | MC_1); // SMCLK 1 MHz, Up Mode, /2 prescaler
 
     P2REN |= BIT6;                      // Enable resistor
     P2OUT |= BIT6;
@@ -103,14 +100,6 @@ void setPWM() {
 /*
  * ISR's
  */
-#pragma vector = TIMER0_A0_VECTOR
-__interrupt void Timer0_A0_ISR(void)
-{
-
-
-    TA0CTL &= ~TAIFG;
-}
-
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void) {
     Wait(200);

@@ -30,6 +30,9 @@
  * Globals
  */
 unsigned int counter = 0;
+unsigned int counter_temp = 0;
+unsigned int counter_1 = 0;
+unsigned int counter_16 = 0;
 int freq[5] = {66, 33, 22, 17, 11};
 int characters[16] = {_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _A, _B, _C, _D, _E, _F};
 
@@ -126,16 +129,25 @@ void clear() {
 //Timer ISR
 #pragma vector = TIMER0_A0_VECTOR
 __interrupt void Timer0_A0_ISR(void) {
-      // First 7-segment display exercise
+    // First 7-segment display exercise
 //    P10OUT = characters[counter];
 //    counter++;
 //    if(counter == 10) {
 //        counter = 0;
 //    }
 
-    counter++;
-    if(counter == 16) {
-        counter = 0;
+    counter_1++;                // Increments every second
+    if(counter_1 == 16) {
+        counter_1 = 0;
+    }
+
+    counter_temp++;
+    if(counter_temp == 16) {
+        counter_16++;           // Increments every 16 seconds
+        if(counter_16 == 16) {
+            counter_16 = 0;
+        }
+        counter_temp = 0;
     }
 
 
@@ -148,7 +160,7 @@ __interrupt void Timer1_A0_ISR(void) {
         _SET_PIN(4, 3);                 // TURN OFF BOTH CONTROL SIGNALS
         _SET_PIN(7, 5);
 
-        P10OUT = characters[counter];   // SEND DATA TO FIRST 7_SEGMENT
+        P10OUT = characters[counter_16];   // SEND DATA TO FIRST 7_SEGMENT
 
         _CLEAR_PIN(4, 3);               // TURN ON FIRST CONTROL SIGNAL
 
@@ -157,7 +169,7 @@ __interrupt void Timer1_A0_ISR(void) {
         _SET_PIN(4, 3);                 // TURN OFF BOTH CONTROL SIGNALS
         _SET_PIN(7, 5);
 
-        P10OUT = characters[counter];   // SEND DATA TO SECOND 7_SEGMENT
+        P10OUT = characters[counter_1];   // SEND DATA TO SECOND 7_SEGMENT
 
         _CLEAR_PIN(7, 5);               // TURN ON SECOND CONTROL SIGNAL
 
