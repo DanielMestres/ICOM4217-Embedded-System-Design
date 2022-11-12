@@ -285,7 +285,7 @@ void main(void) {
            Wait(100);                   // Software Debounce
            counter++;
            updateCountStr();
-           setcmd(_CLEAR_DISPLAY);
+           setcmd(_DISPLAY_CLEAR);
            writeMessage(countStr);
            PUSH_FLAG = 0;
        }

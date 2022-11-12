@@ -20,6 +20,7 @@
 * Prototypes
 */
 static void Wait(volatile int time_1);
+void updateDecimalStr(int value);
 char* prntnum(unsigned long num, int base, char sign, char *outbuf);
 void hextobin(char* hex);
 void setPorts(void);
@@ -35,6 +36,7 @@ void LCDinit(void);
 void inputDAC(int num);
 void setADC(void);
 void setTimer(void);
+void setPWM(void);
 
 /*
  * Globals
@@ -42,7 +44,7 @@ void setTimer(void);
 int values[12] = {0x00, 0x17, 0x2E, 0x45, 0x5C, 0x73, 0x8A, 0xA1, 0xB8, 0xCF, 0xE6, 0xFF};
 char* valuesString[12] = {"00", "17", "2E", "45", "5C", "73", "8A", "A1", "B8", "CF", "E6", "FF"};
 unsigned int index = 0;
-//char hex[12];
+char decimalStr[3] = "000";
 
 /*
  * main.c
@@ -53,12 +55,18 @@ void main(void)
 	setPorts();
 	LCDinit();
 	setADC();
-
+	setPWM();
 	setTimer();
+
 	setInterrupts();
 
 	while(1) {
 	    ADC12CTL0 |= ADC12SC; // Start sampling/conversion
+
+	    // Update LED
+	    float per = ((float) ADC12MEM0 / 4095.0);
+	    int temp = (int) (per * 500);
+	    TB0CCR2 = temp;
 	}
 }
 
@@ -69,6 +77,24 @@ static void Wait(volatile int time_1) {
     volatile int time_2;
     for (time_1; time_1>1; time_1--) {
         for (time_2 = 110; time_2 >= 0; time_2--);
+    }
+}
+
+// Actualiza el decimalStr
+void updateDecimalStr(int value) {
+    float per = ((float) value / 4095.0);
+    int temp = (int) (per * 340);
+    int i = 0;                  // ???
+    for(; temp > 0; temp /= 10, i++){
+
+        //si no hacemos esto, el string se guarda al reves. es decir
+        //si count es 123, el countStr[] lo guardaria como 321
+        decimalStr[strlen(decimalStr)-1-i]= temp%10 + '0';
+    }
+
+    while(i < 4) {
+        decimalStr[strlen(decimalStr)-1-i]=0+'0';
+        i++;
     }
 }
 
@@ -97,11 +123,6 @@ char* prntnum(unsigned long num, int base, char sign, char *outbuf)
     outbuf[j] = 0;
 
     return outbuf;
-
-//    setcmd(_DISPLAY_CLEAR);
-//    writeLCD(hex);
-//    setLine();
-//    writeLCD("v= ");
 
 }
 
@@ -210,6 +231,9 @@ void setPorts() {
 
     // ADC
     _SET_INPUT(6, 7);       // A7 analog input
+
+    // PWM
+    _SET_OUTPUT(4, 2);      // TB0 PWM LED
 }
 
 void setInterrupts() {
@@ -282,6 +306,16 @@ void setTimer() {
     TA0CTL &= ~TAIFG;
 }
 
+void setPWM() {
+    // PWM at 1000 Hz
+    // Timer0_B0 Configuration (TB0)
+    P4SEL |= BIT2;
+    TB0CCR0 = 500;                     // Compare Register
+    TB0CCTL2 = OUTMOD_7;                // Reset output mode
+    TB0CCR2 = ADC12MEM0;
+    TB0CTL |= (TASSEL_2 | ID_1 | MC_1); // SMCLK 1 MHz, Up Mode, /2 prescaler
+}
+
 void setADC() {
     P6SEL |= BIT7;                                          // Select 6.7 A7
     ADC12CTL0 &= ~ADC12ENC;                                 // necessary to setup registers
@@ -302,6 +336,7 @@ void setADC() {
 #pragma vector = TIMER0_A0_VECTOR
 __interrupt void Timer0_A0_ISR(void)
 {
+    // DAC exercise
 //    inputDAC(values[index]);
 //    hextobin(valuesString[index]);
 //    writeLCD(values[index]);
@@ -311,13 +346,19 @@ __interrupt void Timer0_A0_ISR(void)
 //    }else {
 //        index = 0;
 //    }
+
     int decimal = ADC12MEM0;
-    char* hex = malloc(sizeof(char*));
+    char* hex = (char*) malloc(sizeof(char*));
     hex = prntnum(decimal, 16, '+', hex);
     setcmd(_DISPLAY_CLEAR);
     writeLCD(hex);
     setLine();
-    writeLCD("v= ");
+    updateDecimalStr(decimal);
+    setdata(decimalStr[0]);
+    setdata('.');
+    setdata(decimalStr[1]);
+    setdata(decimalStr[2]);
+    writeLCD(" V");
     free(hex);
 
     TA0CTL &= ~TAIFG;
@@ -325,6 +366,5 @@ __interrupt void Timer0_A0_ISR(void)
 
 #pragma vector = ADC12_VECTOR
 __interrupt void ADC12_ISR(void) {
-//    writeLCD("Interrupt!");
-//    setcmd(_DISPLAY_CLEAR);
+
 }

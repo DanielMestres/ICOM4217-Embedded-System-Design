@@ -9,21 +9,27 @@ CMD_SRCS += \
 ../lnk_msp430f5438.cmd 
 
 C_SRCS += \
-../LCDLPM.c 
+../LCDLPM.c \
+../RGB.c 
 
 C_DEPS += \
-./LCDLPM.d 
+./LCDLPM.d \
+./RGB.d 
 
 OBJS += \
-./LCDLPM.obj 
+./LCDLPM.obj \
+./RGB.obj 
 
 OBJS__QUOTED += \
-"LCDLPM.obj" 
+"LCDLPM.obj" \
+"RGB.obj" 
 
 C_DEPS__QUOTED += \
-"LCDLPM.d" 
+"LCDLPM.d" \
+"RGB.d" 
 
 C_SRCS__QUOTED += \
-"../LCDLPM.c" 
+"../LCDLPM.c" \
+"../RGB.c" 
 
 
