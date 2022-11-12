@@ -2,8 +2,10 @@ LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
 activeLaunchTarget=null\:---
-configDescList=
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:DAC_ADC
 eclipse.preferences.version=1
+org.eclipse.launchbar.core.descriptorType.default\:DAC_ADC/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:DAC_ADC/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
 org.eclipse.launchbar.core.descriptorType.default\:Interrupts_Keypad/activeLaunchMode=debug
 org.eclipse.launchbar.core.descriptorType.default\:Interrupts_Keypad/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
 org.eclipse.launchbar.core.descriptorType.default\:LCDLPM/activeLaunchMode=debug

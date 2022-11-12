@@ -1,4 +1,4 @@
-"./keypad.obj"
+"./Keypad.obj"
 "../lnk_msp430f5438.cmd"
 -llibmath.a
 -llibc.a

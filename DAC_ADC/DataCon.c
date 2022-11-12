@@ -1,5 +1,6 @@
 #include <msp430.h> 
 
+
 /*
 * Macros
 */
@@ -19,6 +20,7 @@
 * Prototypes
 */
 static void Wait(volatile int time_1);
+char* prntnum(unsigned long num, int base, char sign, char *outbuf);
 void hextobin(char* hex);
 void setPorts(void);
 void setInterrupts(void);
@@ -40,6 +42,7 @@ void setTimer(void);
 int values[12] = {0x00, 0x17, 0x2E, 0x45, 0x5C, 0x73, 0x8A, 0xA1, 0xB8, 0xCF, 0xE6, 0xFF};
 char* valuesString[12] = {"00", "17", "2E", "45", "5C", "73", "8A", "A1", "B8", "CF", "E6", "FF"};
 unsigned int index = 0;
+//char hex[12];
 
 /*
  * main.c
@@ -50,19 +53,12 @@ void main(void)
 	setPorts();
 	LCDinit();
 	setADC();
-//	writeLCD("Hello :D!");
-//	setcmd(_DISPLAY_CLEAR);
-//	setLine();
-//
-//	setTimer();
+
+	setTimer();
 	setInterrupts();
 
 	while(1) {
 	    ADC12CTL0 |= ADC12SC; // Start sampling/conversion
-//	    Wait(500);
-	    if(ADC12MEM0 >= 0x0FFF)
-	        Wait(200);
-//	        setdata('A');
 	}
 }
 
@@ -74,6 +70,39 @@ static void Wait(volatile int time_1) {
     for (time_1; time_1>1; time_1--) {
         for (time_2 = 110; time_2 >= 0; time_2--);
     }
+}
+
+// Second exercise
+char* prntnum(unsigned long num, int base, char sign, char *outbuf)
+{
+
+    int i = 12;
+    int j = 0;
+
+    do{
+        outbuf[i] = "0123456789ABCDEF"[num % base];
+        i--;
+        num = num/base;
+    }while( num > 0);
+
+    if(sign == '-'){
+        outbuf[0] = sign;
+        ++j;
+    }
+
+    while( ++i < 13){
+       outbuf[j++] = outbuf[i];
+    }
+
+    outbuf[j] = 0;
+
+    return outbuf;
+
+//    setcmd(_DISPLAY_CLEAR);
+//    writeLCD(hex);
+//    setLine();
+//    writeLCD("v= ");
+
 }
 
 // Print binary value to LCD
@@ -184,36 +213,36 @@ void setPorts() {
 }
 
 void setInterrupts() {
-    _BIS_SR(GIE);                       // Enable global interrupts
+    _BIS_SR(GIE);           // Enable global interrupts
 }
 
 void setWriteInstruction() {
-    _CLEAR_PIN(7, 7); // RS output (0)
-    _CLEAR_PIN(7, 4); // RW output (0)
+    _CLEAR_PIN(7, 7);       // RS output (0)
+    _CLEAR_PIN(7, 4);       // RW output (0)
 }
 
 void setWriteData() {
-    _SET_PIN(7, 7); // RS output (1)
-    _CLEAR_PIN(7, 4); // RW output (0)
+    _SET_PIN(7, 7);         // RS output (1)
+    _CLEAR_PIN(7, 4);       // RW output (0)
 }
 
 void enable() {
-    _SET_PIN(7, 5); // E output (1)
-    _CLEAR_PIN(7, 5); // E output (0)
+    _SET_PIN(7, 5);         // E output (1)
+    _CLEAR_PIN(7, 5);       // E output (0)
 }
 
 void setcmd(int num) {
     setWriteInstruction();
     P10OUT = num;
     enable();
-    Wait(50);
+    Wait(3);
 }
 
 void setdata(int data) {
     setWriteData();
     P10OUT = data;
     enable();
-    Wait(10);
+    Wait(3);
 }
 
 void writeLCD(char* word) {
@@ -253,40 +282,49 @@ void setTimer() {
     TA0CTL &= ~TAIFG;
 }
 
-// max = 4096, FIX
 void setADC() {
-    P6SEL |= BIT7;              // Select 6.7 A7
+    P6SEL |= BIT7;                                          // Select 6.7 A7
+    ADC12CTL0 &= ~ADC12ENC;                                 // necessary to setup registers
 
-    ADC12CTL0 &= ~ADC12ENC; //necessary to setup registers
-    ADC12CTL0 = (ADC12SHT02 | ADC12ON); //16  ADC12CLK cycles, adc12 on
+    ADC12CTL0 = (ADC12SHT0_1 | ADC12ON | ADC12MSC);         // 8  ADC12CLK cycles, adc12 on
 
-//    ADC12CTL1 = ADC12SHP + ADC12CONSEQ_2 + ADC12SSEL_2 + ADC12SHS_3; //sampling timer, repeated sampling on single channel,
+    ADC12CTL1 |= (ADC12SHP | ADC12SSEL_0 | ADC12CONSEQ_2);  // sampling timer
+    ADC12CTL2 |= ADC12RES_2;                                // set 12bit resolution(max)
+    ADC12MCTL0 = (ADC12SREF_0 | ADC12INCH_7);               // MEM0 for A7, PIN 6.7 input
 
-    ADC12CTL1 |= (ADC12SHP | ADC12SSEL_3); //sampling timer, repeated sampling on single channel,                                                           //timer B trigger sampling
-    ADC12CTL2 |= ADC12RES_2;                // set 12bit resolution(max)
-    ADC12MCTL0 = ADC12INCH_7;      // A7, PIN 6.7
-
-    ADC12CTL0 |= ADC12ENC;                       //enable conversion
-    ADC12IE = ADC12IE7;                              //Interrupt for MEM0
+    ADC12CTL0 |= ADC12ENC;                                  // enable conversion
+//    ADC12IE = ADC12IE0;                                     // Interrupt for MEM0
 }
 
 /*
- * ISR
+ * ISR's
  */
-//Timer ISR
 #pragma vector = TIMER0_A0_VECTOR
 __interrupt void Timer0_A0_ISR(void)
 {
-    inputDAC(values[index]);
-    hextobin(valuesString[index]);
-//   writeLCD(values[index]);
+//    inputDAC(values[index]);
+//    hextobin(valuesString[index]);
+//    writeLCD(values[index]);
 
-//    setdata();
+//    if(index != 11) {
+//        index++;
+//    }else {
+//        index = 0;
+//    }
+    int decimal = ADC12MEM0;
+    char* hex = malloc(sizeof(char*));
+    hex = prntnum(decimal, 16, '+', hex);
+    setcmd(_DISPLAY_CLEAR);
+    writeLCD(hex);
+    setLine();
+    writeLCD("v= ");
+    free(hex);
 
-    if(index != 11) {
-        index++;
-    }else {
-        index = 0;
-    }
     TA0CTL &= ~TAIFG;
+}
+
+#pragma vector = ADC12_VECTOR
+__interrupt void ADC12_ISR(void) {
+//    writeLCD("Interrupt!");
+//    setcmd(_DISPLAY_CLEAR);
 }

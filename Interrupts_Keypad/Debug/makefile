@@ -10,7 +10,7 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
-"./keypad.obj" \
+"./Keypad.obj" \
 "../lnk_msp430f5438.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibmath.a \
@@ -155,8 +155,8 @@ Interrupts_Keypad.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "keypad.obj" 
-	-$(RM) "keypad.d" 
+	-$(RM) "Keypad.obj" 
+	-$(RM) "Keypad.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
