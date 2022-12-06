@@ -41,7 +41,11 @@ void setPWM(void);
 /*
  * Globals
  */
-int values[12] = {0x00, 0x17, 0x2E, 0x45, 0x5C, 0x73, 0x8A, 0xA1, 0xB8, 0xCF, 0xE6, 0xFF};
+int values[12] = {0x00, 0x17, 0x2E,
+                  0x45, 0x5C, 0x73,
+                  0x8A, 0xA1, 0xB8,
+                  0xCF, 0xE6, 0xFF};
+
 char* valuesString[12] = {"00", "17", "2E", "45", "5C", "73", "8A", "A1", "B8", "CF", "E6", "FF"};
 unsigned int index = 0;
 char decimalStr[3] = "000";
@@ -301,8 +305,7 @@ void setTimer() {
     //Timer0_A0 Configuration
     TA0CCTL0 |= CCIE;                   // Enable interrupt for CCR0.
     TA0CTL = (TASSEL_1 | ID_0 | MC_1);  // ACLK, ACLK/1, Up Mode
-    TA0CCR0 = 39321;                    // Compare Register, f = 32768 / (TA0CCR) f = 1Hz
-//    TA0CCR0 = 65;                    // Compare Register, f = 32768 / (TA0CCR) f = 500Hz
+    TA0CCR0 = 39321;                    // Compare Register, f = 32768 / (TA0CCR) f =~ 1Hz
     TA0CTL &= ~TAIFG;
 }
 
@@ -337,16 +340,17 @@ void setADC() {
 __interrupt void Timer0_A0_ISR(void)
 {
     // DAC exercise
-//    inputDAC(values[index]);
-//    hextobin(valuesString[index]);
-//    writeLCD(values[index]);
+    inputDAC(values[index]);
+    hextobin(valuesString[index]);
+    writeLCD(values[index]);
 
-//    if(index != 11) {
-//        index++;
-//    }else {
-//        index = 0;
-//    }
+    if(index != 11) {
+        index++;
+    }else {
+        index = 0;
+    }
 
+    // DAC exercise
     int decimal = ADC12MEM0;
     char* hex = (char*) malloc(sizeof(char*));
     hex = prntnum(decimal, 16, '+', hex);
